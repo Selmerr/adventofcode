@@ -18,5 +18,8 @@ func StringsToIntegers(list []string) ([]int, error) {
 }
 
 func RemoveIndex[T comparable](slice []T, s int) []T {
-	return append(slice[:s], slice[s+1:]...)
+	newList := make([]T, len(slice))
+	copy(newList, slice)
+	// Remove the element at the given index
+	return append(newList[:s], newList[s+1:]...)
 }

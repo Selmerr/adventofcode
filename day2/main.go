@@ -10,7 +10,7 @@ import (
 )
 
 func Run() {
-	fmt.Println("Advent of Code 2024, Day 1")
+	fmt.Println("Advent of Code 2024, Day 2")
 	fmt.Print("Part 1\n\n")
 	part1()
 	fmt.Print("Part 2\n\n")
