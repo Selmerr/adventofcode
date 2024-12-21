@@ -54,59 +54,49 @@ func part1() {
 
 func part2() {
 	content, err := os.Open("day2/input.txt")
-
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	defer content.Close()
 
-	var count int = 0
+	var safeSlices [][]int
 	scanner := bufio.NewScanner(content)
 	scanner.Split(bufio.ScanLines)
-
+	var scanline int = 0
 	for scanner.Scan() {
 		line := scanner.Text()
 		strlist := strings.Fields(line)
 		intlist, err := utils.StringsToIntegers(strlist)
 		if err != nil {
-			fmt.Print(err)
+			fmt.Println("Error converting line:", err)
+			continue
 		}
-		ascDesc := checkAscendingOrDescending(intlist)
-		if ascDesc {
-			fmt.Printf("\n(1) Ascending List: %v\n", intlist)
-			isSafe, index := isIncreasing(intlist)
-			if !isSafe {
-				errList := removeError(intlist, index)
-				fmt.Printf("Ascending List with error: %v\n", intlist)
-				fmt.Printf("Ascending List without error: %v\n", errList)
-				if errorSafe, _ := isIncreasing(errList); errorSafe {
-					fmt.Printf("(2) Ascending List: %v is safe\n", errList)
-					count++
-				}
-			} else {
-				fmt.Printf("(3) Ascending List: %v is safe\n", intlist)
-				count++
-			}
+		scanline++
+
+		fmt.Printf("Processing line %d: %v\n", scanline, intlist)
+
+		// Track if the line has been added
+		added := false
+
+		// Check if already safe
+		if ascSafeCheck(intlist) || descSafeCheck(intlist) {
+			fmt.Printf("Line %d is already safe: %v\n", scanline, intlist)
+			safeSlices = append(safeSlices, intlist)
+			added = true
 		}
-		if !ascDesc {
-			fmt.Printf("\n(1) Descending List: %v\n", intlist)
-			isSafe, index := isDecreasing(intlist)
-			if !isSafe {
-				errList := removeError(intlist, index)
-				fmt.Printf("Decreasing list with error: %v\n", intlist)
-				fmt.Printf("Decreasing list without error: %v\n", errList)
-				if errorSafe, _ := isDecreasing(errList); errorSafe {
-					fmt.Printf("(2) Descending List: %v is safe\n", errList)
-					count++
-				}
-			} else if isSafe {
-				fmt.Printf("(3) Descending List: %v is safe\n", intlist)
-				count++
-			}
+
+		// Check for removal-based safety
+		if !added && removeAndCheckAsc(intlist) {
+			fmt.Printf("Line %d is safe after removal for ascending: %v\n", scanline, intlist)
+			safeSlices = append(safeSlices, intlist)
+			added = true
+		}
+		if !added && removeAndCheckDesc(intlist) {
+			fmt.Printf("Line %d is safe after removal for descending: %v\n", scanline, intlist)
+			safeSlices = append(safeSlices, intlist)
 		}
 	}
-	fmt.Printf("total number of safe rows: %d \n", count)
+	fmt.Printf("Total number of safe lines: %d\n", len(safeSlices))
 }
 
 func isIncreasing(list []int) (bool, int) {
@@ -128,19 +118,51 @@ func isDecreasing(list []int) (bool, int) {
 }
 
 func removeError(list []int, index int) []int {
-	fmt.Printf("List: %v Remove index: %d\n", list, index)
-	return append(list[:index], list[index+1:]...)
+	// Create a new slice to avoid modifying the original list
+	newList := make([]int, len(list))
+	copy(newList, list)
+
+	// Remove the element at the given index
+	return append(newList[:index], newList[index+1:]...)
 }
 
-// Returns true for ascending, and false for not descending (which has to be descending)
-func checkAscendingOrDescending(list []int) bool {
-	sum := 0
-	sum += list[1] - list[0]
-	sum += list[2] - list[1]
-
-	if sum > 0 {
-		return true
-	} else {
-		return false
+func ascSafeCheck(list []int) bool {
+	for i := 0; i < len(list)-1; i++ {
+		//if the difference between two indexes are beyond the safe rules
+		if list[i+1]-list[i] < 1 || list[i+1]-list[i] > 3 {
+			return false
+		}
 	}
+	return true
+}
+
+func descSafeCheck(list []int) bool {
+	for i := 0; i < len(list)-1; i++ {
+		if list[i+1]-list[i] >= 0 || list[i+1]-list[i] < -3 {
+			return false
+		}
+	}
+	return true
+}
+
+func removeAndCheckAsc(list []int) bool {
+	for i := 0; i < len(list); i++ {
+		newList := removeError(list, i)
+		safe := ascSafeCheck(newList)
+		fmt.Printf("NewList: %v safe: %v\n", newList, safe)
+		if safe {
+			return true
+		}
+	}
+	return false
+}
+
+func removeAndCheckDesc(list []int) bool {
+	for i := 0; i < len(list); i++ {
+		newList := removeError(list, i)
+		if safe := descSafeCheck(newList); safe {
+			return true
+		}
+	}
+	return false
 }

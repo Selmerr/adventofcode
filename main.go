@@ -13,8 +13,8 @@ func main() {
 		return
 	}
 
-	day := os.Args[1]
-
+	//day := os.Args[1]
+	day := "2"
 	switch day {
 	case "1":
 		day1.Run()

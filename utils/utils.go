@@ -16,3 +16,7 @@ func StringsToIntegers(list []string) ([]int, error) {
 	}
 	return ints, nil
 }
+
+func RemoveIndex[T comparable](slice []T, s int) []T {
+	return append(slice[:s], slice[s+1:]...)
+}
